@@ -1,0 +1,61 @@
+buildscript {
+	repositories {
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		mavenCentral()
+	}
+	dependencies {
+		// 1.16 仍支持官方 mojmap 映射；版本高于构建 0.134.1 的 loom
+		classpath 'net.fabricmc:fabric-loom:1.16.3'
+	}
+}
+
+apply plugin: 'fabric-loom'
+
+version = project.mod_version + "+" + project.minecraft_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+dependencies {
+	implementation project(':common')
+	include project(':common')
+
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	// 1.21.7+ 为官方 mojmap 命名，与 26 系保持一致（避免每版本重写 yarn 词汇）
+	mappings loom.officialMojangMappings()
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	// 1.21.x 生产环境为 intermediary，fabric-api 需经 Loom 重映射到命名空间
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	modImplementation files("${rootProject.projectDir}/libs/${project.malilib_jar}")
+
+	// runClient 运行时 fabric-loader 需要 ASM/Mixin 系在类路径上
+	implementation "org.ow2.asm:asm:9.7.1"
+	implementation "org.ow2.asm:asm-tree:9.7.1"
+	implementation "org.ow2.asm:asm-commons:9.7.1"
+	implementation "org.ow2.asm:asm-analysis:9.7.1"
+	implementation "org.ow2.asm:asm-util:9.7.1"
+	implementation "net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7"
+}
+
+processResources {
+	inputs.property "version", project.version
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}

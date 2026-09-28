@@ -1,0 +1,8 @@
+.数据/
+.idea/
+build/
+build_pure/
+.gradle/
+mc_logs/
+PLAN.md
+COMPATIBILITY.md

@@ -1,0 +1,45 @@
+// 根工程：聚合多版本构建，并把所有版本 jar 收集到 build_pure/
+def versionMods = subprojects.findAll { p -> p.name.startsWith('mc') }
+
+// 收集目标文件名：keymapviewer-<mod_version>-mc<jar_tag>.jar
+static String outJarName(Project sub, String jarName) {
+	String ver = sub.findProperty('mod_version') ?: '1.0.0'
+	String tag = sub.findProperty('jar_tag') ?: ('mc' + (sub.findProperty('minecraft_version') ?: sub.name))
+	return "keymapviewer-${ver}-mc${tag}.jar"
+}
+
+tasks.register('buildPure') {
+	group = 'build'
+	description = '构建全部版本并收集 jar 到 build_pure/（文件名带版本标签）'
+	dependsOn versionMods.collect { it.path + ':build' }
+	doLast {
+		File outDir = new File(rootDir, 'build_pure')
+		outDir.mkdirs()
+		def copied = []
+		versionMods.each { sub ->
+			File libs = new File(sub.projectDir, 'build/libs')
+			if (!libs.isDirectory()) {
+				return
+			}
+			libs.listFiles().each { jar ->
+				if (jar.isFile() && jar.name.endsWith('.jar') && !jar.name.contains('-sources.') && !jar.name.contains('-dev.')) {
+					String name = outJarName(sub, jar.name)
+					copy {
+						from jar
+						into outDir
+						rename { name }
+					}
+					copied << name
+				}
+			}
+		}
+		logger.lifecycle('[buildPure] 已收集 {} 个 jar 到 {}: {}', copied.size(), outDir, copied.join(', '))
+	}
+}
+
+// 默认 build 任务也聚合全部版本构建
+tasks.register('buildAll') {
+	group = 'build'
+	description = '构建全部版本的 mod jar（不收集）'
+	dependsOn versionMods.collect { it.path + ':build' }
+}

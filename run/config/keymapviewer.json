@@ -1,0 +1,19 @@
+{
+  "hudPreset": "BOTTOM_LEFT",
+  "hudOffsetX": -5,
+  "hudOffsetY": 40,
+  "hudScale": 0.70000005,
+  "hudTextOpacity": 1.0,
+  "hudBgOpacity": 0.1,
+  "hudEnabled": true,
+  "showHudCategories": true,
+  "showVanilla": true,
+  "showUnbound": false,
+  "recentOnly": false,
+  "pinned": [
+    "MALILIB|Tweakeroo|通用快捷键|容器预览 - 快捷键",
+    "MALILIB|Tweakeroo|功能切换快捷键|灵魂出窍",
+    "MALILIB|MiniHUD|通用快捷键|全局渲染开关"
+  ],
+  "defaultView": "list"
+}

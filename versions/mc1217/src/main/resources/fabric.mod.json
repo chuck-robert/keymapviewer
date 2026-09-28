@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "keymapviewer",
+  "version": "${version}",
+  "name": "Key Map Viewer",
+  "description": "在 HUD 上实时显示并管理原版与 MaLiLib（Tweakeroo/Litematica/MiniHUD 等）的按键绑定，提供键盘视图与列表视图。",
+  "authors": [
+    "星林"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/keymapviewer/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.keymapviewer.KeyMapViewerClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "minecraft": ">=1.21.9 <1.22",
+    "java": ">=21"
+  },
+  "recommends": {
+    "malilib": "*"
+  }
+}
