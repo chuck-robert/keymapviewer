@@ -12,6 +12,7 @@ pluginManagement {
 rootProject.name = 'keymapviewer'
 
 include 'common'
+include 'versions:mc263'
 include 'versions:mc2612'
 include 'versions:mc262'
 include 'versions:mc1217'

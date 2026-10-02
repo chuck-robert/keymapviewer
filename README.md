@@ -4,7 +4,7 @@
 并提供「列表视图 + 键盘视图 + HUD 设置」三个分页用于查看、固定与修改
 **原版键位** 与 **MaLiLib 系列模组**（Tweakeroo / Litematica / MiniHUD / Item Scroller 等）的按键。
 
-兼容目标：**MC 1.20.1 · 1.21（0–11）· 26.1.x / 26.2**，每个目标各自配套 Fabric Loader 0.19.x / Fabric API / MaLiLib / Java 版本（见 COMPATIBILITY.md）
+兼容目标：**MC 1.20.1 · 1.21（0–11）· 26.1.x / 26.2 / 26.3**，每个目标各自配套 Fabric Loader 0.19.x / Fabric API / MaLiLib / Java 版本（见 COMPATIBILITY.md）
 
 ## 功能
 
@@ -42,22 +42,31 @@ gradlew.bat buildPure
 
 | jar 文件 | 覆盖的 MC 版本 | 渲染 | 输入模型 |
 |---|---|---|---|
-| `keymapviewer-1.0.0-mc1.20.1.jar` | 1.20.1 | GuiGraphics | 经典坐标 |
-| `keymapviewer-1.0.0-mc1.21.0-1.21.8.jar` | 1.21.0 ~ 1.21.8 | GuiGraphics | 经典坐标 |
-| `keymapviewer-1.0.0-mc1.21.9-1.21.11.jar` | 1.21.9 ~ 1.21.11 | GuiGraphics | 新事件模型 |
-| `keymapviewer-1.0.0-mc26.1-26.2.jar` | 26.1.x / 26.2 | GuiGraphicsExtractor | 新事件模型 |
+| `keymapviewer-1.0.2-mc1.20.1.jar` | 1.20.1 | GuiGraphics | 经典坐标 |
+| `keymapviewer-1.0.2-mc1.21.8.jar` | 1.21.0 ~ 1.21.8 | GuiGraphics | 经典坐标 |
+| `keymapviewer-1.0.2-mc1.21.9-1.21.11.jar` | 1.21.9 ~ 1.21.11 | GuiGraphics | 新事件模型 |
+| `keymapviewer-1.0.2-mc26.1.jar` | 26.1.x | GuiGraphicsExtractor | 新事件模型 |
+| `keymapviewer-1.0.2-mc26.2.jar` | 26.2 | GuiGraphicsExtractor | 新事件模型（GLFW） |
+| `keymapviewer-1.0.2-mc26.3.jar` | 26.3 | GuiGraphicsExtractor | 新事件模型（**SDL**） |
 
 架构：`common/` 为纯逻辑共享层（配置/模型/聚合器/改键/键盘布局/HUD 行模型/Canvas 面板，
-无 MC 依赖）；`versions/mc1201·mc121·mc1217·mc2612` 各只含 ~9 个真差异粘合文件
-（Canvas 实现/本地化/键名/采样器/原版与 MaLiLib Provider/HUD/设置屏/入口）。
+无 MC 依赖）；`versions/mc1201·mc121·mc1217·mc2612·mc262·mc263` 各只含约 9~10 个真差异粘合文件
+（Canvas 实现/本地化/键名/采样器/原版与 MaLiLib Provider/HUD/设置屏/入口，mc263 另含键码桥接层 `SdlKeys`）。
 规则：**同一输入+渲染世代共享一个 jar**；每个 jar 在运行时由 Fabric Loader 做跨版本重映射。
 
 > 版本边界依据（实证）：
 > - 1.21.9 起键盘/鼠标改为 `KeyEvent`/`MouseButtonEvent` 记录模型并引入 `KeyMapping.Category`
 >   （此前为经典坐标输入 + String 分类）；1.21.0–1.21.8 与 1.20.1 同为经典一代。
 > - 26 系才是 `GuiGraphicsExtractor` 渲染管线；1.20.1–1.21.11 全程 `GuiGraphics`。
+> - **26.3 起输入后端由 GLFW 换成 SDL**（版本清单里 `lwjgl-glfw` 被 `lwjgl-sdl` 取代）：
+>   `InputConstants.Type.KEYSYM` 更名 `KEYBOARD` 且取值变为 SDL 扫描码；鼠标键号变为
+>   SDL 约定（1=左 2=中 3=右）；MaLiLib 0.30 的 keybind 也存 SDL 扫描码（与原版同一空间），
+>   鼠标键为「MC 鼠标键号 - 100」（左键=-99）。故 26.3 单独成 jar，并由
+>   `versions/mc263/.../input/SdlKeys.java` 在原版 SDL 扫描码与本模组 GLFW 规范码之间归一化。
 > - 各模块的 Fabric API / Loom / MaLiLib / Java 目标均有配套版本（见各 `versions/*/gradle.properties`）。
 > - 构建每个历史版本模块需要与 **fabric-api 构建时配套的 Loom 版本**（旧版固件使用 buildscript 方式引入 Loom）。
+> - Loom 版本要与 Gradle 版本匹配：本仓库用 Gradle 9.5.1，故 26 系模块用 Loom 1.17.19；
+>   Loom 1.18.x 需要 Gradle ≥ 9.7。
 
 ## 配置
 
@@ -82,6 +91,12 @@ gradlew.bat buildPure
 ## 开发自测
 
 ```bash
-KVM_DEV=1 gradlew.bat runClient   # 4s 自动开界面（KVM_DEV_VIEW=list|keyboard|hud）
-                                   # 10s 切键盘视图，20s 导出 run/kvm_bindings.json
+# 单个版本：4s 自动开界面（KVM_DEV_VIEW=list|keyboard|hud），20s 导出 run/kvm_bindings.json
+set KVM_DEV=1 && gradlew.bat :versions:mc263:runClient
+
+# 跨版本自动验证（真实启动 + 检查开菜单/HUD/键位导出）
+python scripts/autotest.py --module mc263
 ```
+
+> 单模块任务建议加 `--configure-on-demand`：本仓库是多版本聚合构建，Gradle 默认会配置
+> 全部 6 个子工程（每个都有各自的 Loom 版本），仅编译一个版本时那一步是纯开销。

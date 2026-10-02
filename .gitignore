@@ -5,4 +5,8 @@ build_pure/
 .gradle/
 mc_logs/
 PLAN.md
+.dsh-tmp/
+.gitignore
 COMPATIBILITY.md
+*.log*
+*.log.gz
